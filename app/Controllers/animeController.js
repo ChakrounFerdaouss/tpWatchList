@@ -25,7 +25,7 @@ const createAnime = async (req, res) => {
 
 const getAllAnimes = async (req, res) => {
   try {
-    const animes = await AnimeModel.find({ author: req.user._id }).populate("author", "prenom nom");
+    const animes = await AnimeModel.find({}).populate("author", "prenom nom");
     res.status(200).send(animes);
   } catch (error) {
     res.status(400).send({ error: error.message });
@@ -106,11 +106,35 @@ const updateProgress = async (req, res) => {
   }
 };
 
+const searchAnimes = async (req, res) => {
+  try {
+    const { name, category, rating } = req.query;
+    const query = {};
+
+    if (name) {
+      query.name = { $regex: name, $options: "i" }; // recherche insensible à la casse
+    }
+
+    if (category) {
+      query.category = category;
+    }
+
+    if (rating) {
+      query.rating = Number(rating); // attention : peut être égal strictement
+      // Ou pour >= un seuil : query.rating = { $gte: Number(rating) }
+    }
+
+    const results = await AnimeModel.find(query);
+    res.status(200).json(results);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   createAnime,
   getAllAnimes,
   deleteAnime,
   updateAnime,
-  getAnimeById,
-  updateProgress
+  getAnimeById, 
 };
